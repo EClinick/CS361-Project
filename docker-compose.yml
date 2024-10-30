@@ -1,0 +1,57 @@
+version: '3.8'  # Use a more recent version for better features
+
+services:
+  main_program:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8501:8501"
+    volumes:
+      - .:/app  # Mount the current directory to /app inside the container
+    command: ["streamlit", "run", "main.py", "--server.port=8501", "--server.address=0.0.0.0"]
+    depends_on:
+      - task_stats
+      - reminder_service
+      - task_filter
+      - productivity_analysis
+
+  task_stats:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5001:5001"
+    volumes:
+      - .:/app
+    command: ["python", "task_stats.py"]
+
+  reminder_service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5002:5002"
+    volumes:
+      - .:/app
+    command: ["python", "reminder_service.py"]
+
+  task_filter:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5003:5003"
+    volumes:
+      - .:/app
+    command: ["python", "task_filter.py"]
+
+  productivity_analysis:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5004:5004"
+    volumes:
+      - .:/app
+    command: ["python", "productivity_analysis.py"]

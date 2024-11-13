@@ -183,40 +183,44 @@ The comprehensive testing of the **Task Filter Service** ensures that filtering 
     - **Headers:** Authentication token. -->
 
 ## Inclusivity Heuristics Justification
+### Heuristic 1: Explain Benefits of Features
+The project explains the benefits of new and existing features clearly on each page, helping users understand how each feature can improve their task management experience.
 
-•	How your design correctly reflects heuristic 1 (“Explain (to users) the benefits of using new and existing features”): 
+### Heuristic 2: Explain Costs of Features
+Each page transparently communicates any costs or tradeoffs associated with using features, allowing users to make informed decisions about their usage.
 
-The project correctly reflects heuristic 1 by explaining the benefits of using new and existing features. This is shown on each page.
+### Heuristic 3: Flexible Information Access
+The "📋 View Tasks" page exemplifies this by providing customizable filters for priority, completion status, and due date, letting users control how much information they see.
 
-•	How your design correctly reflects heuristic 2 (“Explain (to users) the costs of using new and existing features”): 
+### Heuristic 4: Maintain Familiar Features
+The application maintains consistency through:
+- Familiar color schemes across pages
+- Consistent layout patterns
+- Standard navigation elements
 
-The project correctly reflects heuristic 2 by explaining the costs of using new and existing features. This is shown on each page.
+### Heuristic 5: Support Reversible Actions
+Users can:
+- Undo/redo actions via sidebar buttons on all pages
+- Navigate backwards through pages
+- Reverse any changes made to tasks
 
-•	How your design correctly reflects heuristic 3 (“Let people gather as much information as they want, and no more than they want”): 
+### Heuristic 6: Clear Task Pathways
+The application provides clear navigation paths for all core functions:
+- Adding tasks
+- Viewing tasks
+- Updating tasks
+- Analyzing task data
 
-The project correctly reflects heuristic 3 by letting users gather as much information as they want, and no more than they want. This is shown on "📋 View Tasks" page, where users can filter the tasks by priority, completion status, and due date.
+### Heuristic 7: Multiple Approaches
+The "📝 Add Task" page demonstrates this by offering:
+- Quick add option (task name only)
+- Detailed form (name, priority, due date, description)
 
-
-•	How your design correctly reflects heuristic 4 (“Keep familiar features available”):
-
-The project correctly reflects heuristic 4 by keeping familiar features available. This is shown on each page. The color scheme is consistent and the layout is familiar.
-
-
-•	How your design correctly reflects heuristic 5 (“Make undo/redo and backtracking available”):
-
-The project correctly reflects heuristic 5 by making undo/redo and backtracking available. This is shown on each page. The user can undo and redo actions, and go back to previous pages. The redo and undo buttons are available on the sidebar for any page.
-
-•	How your design correctly reflects heuristic 6 (“Provide an explicit path through the task”): 
-
-The project correctly reflects heuristic 6 by providing an explicit path through the task. This is shown on each page. The user can easily navigate through the pages to add, view, update, and analyze tasks.
-
-•	How your design correctly reflects heuristic 7 (“Provide ways to try out different approaches”):
-
-The project correctly reflects heuristic 7 by providing ways to try out different approaches. This is shown on "📝 Add Task" page, where the user can "quick add" a task by just inputting the task name, or a more detailed form add where they input the task name, priority, due date, and description.
-
-•	How your design correctly reflects heuristic 8 (“Encourage tinkerers to tinker mindfully”): 
-
-The project correctly reflects heuristic 8 by encouraging tinkerers to tinker mindfully. This is shown on "✅ Mark Complete" page, where the user can mark a task as complete by clicking a checkbox, or a list of tasks that are due within the next day. Before they can complete a task, they are asked to confirm that they want to mark the task as complete. Which encourages them to think about the task before completing it.
+### Heuristic 8: Mindful Feature Exploration
+The "✅ Mark Complete" page encourages thoughtful interaction by:
+- Requiring confirmation before task completion
+- Showing tasks due within 24 hours
+- Providing clear feedback on actions
 
 
 ## Setup Instructions

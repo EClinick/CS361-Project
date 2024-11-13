@@ -2,3 +2,5 @@ streamlit
 requests
 flask
 pandas
+streamlit-calendar
+plotly

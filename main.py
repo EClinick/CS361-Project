@@ -2,6 +2,9 @@ import streamlit as st
 import requests
 import pandas as pd
 import uuid
+from datetime import datetime
+# from streamlit_calendar import calendar
+# import matplotlib.pyplot as plt
 
 # Microservice URLs
 TASK_STATS_URL = "http://task_stats:5001"
@@ -122,6 +125,8 @@ def handle_add_task(title, description, due_date, priority, message_type):
         "due_date": due_date.strftime("%Y-%m-%d") if due_date else "",
         "priority": priority,
         "completed": False,
+        "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "stopped_at": None
     }
 
     response = requests.post(f"{TASK_STATS_URL}/add_task", json=task_data)
@@ -271,35 +276,283 @@ def view_tasks():
     st.header("View Tasks")
     
     # Explain benefits and costs
-    st.info("**Benefits:** Provides a comprehensive overview of all your tasks, helping you manage them efficiently.")
+    st.info("**Benefits:** Provides a comprehensive overview of all your tasks, helping you manage them efficiently. Use the filter options to narrow down your tasks.")
     st.warning("**Costs:** Displaying a large number of tasks may make the interface cluttered and harder to navigate.")
 
-    response = requests.get(f"{TASK_STATS_URL}/view_tasks")
+    # Initialize session state if needed
+    if "clear_filters" not in st.session_state:
+        st.session_state.clear_filters = False
+
+    # Load saved preferences
+    saved_prefs_response = requests.get(f"{TASK_FILTER_URL}/get_saved_preferences")
+    saved_preference = None
+    if saved_prefs_response.ok:
+        preferences_data = saved_prefs_response.json()
+        if preferences_data.get("saved_preferences"):
+            saved_preference = preferences_data["saved_preferences"][0]  # Get the single saved preference
+
+    # Initialize filter values from saved preference or defaults
+    default_priority = saved_preference.get("priority", "all") if saved_preference else "all"
+    default_completed = saved_preference.get("completed", "all") if saved_preference else "all"
+    default_date = None
+    if saved_preference and saved_preference.get("due_date"):
+        try:
+            default_date = datetime.strptime(saved_preference["due_date"], "%Y-%m-%d").date()
+        except ValueError:
+            default_date = None
+
+    # Filter section
+    with st.expander("Filter Options"):
+        # Create three columns for filters
+        col1, col2 = st.columns([3, 1])
+        
+        with col1:
+            # Create sub-columns for filter inputs
+            filter_col1, filter_col2, filter_col3 = st.columns(3)
+            with filter_col1:
+                priority = st.selectbox(
+                    "Priority Filter", 
+                    ["all", "low", "medium", "high"],
+                    index=["all", "low", "medium", "high"].index(default_priority)
+                )
+            
+            with filter_col2:
+                due_date = st.date_input(
+                    "Due Date Filter",
+                    value=default_date
+                )
+            
+            with filter_col3:
+                completed = st.selectbox(
+                    "Completion Status",
+                    ["all", "completed", "pending"],
+                    index=["all", "completed", "pending"].index(default_completed)
+                )
+        
+        with col2:
+            # Add some spacing
+            st.write("")
+            st.write("")
+            # Create a container for buttons with custom styling
+            with st.container():
+                # Use HTML and CSS for better-looking buttons
+                st.markdown(
+                    """
+                    <style>
+                    .stButton > button {
+                        width: 100%;
+                        margin-bottom: 5px;
+                    }
+                    .save-btn {
+                        background-color: #4CAF50;
+                        color: white;
+                    }
+                    .clear-btn {
+                        background-color: #f44336;
+                        color: white;
+                    }
+                    .reset-btn {
+                        background-color: #2196F3;
+                        color: white;
+                    }
+                    </style>
+                    """,
+                    unsafe_allow_html=True
+                )
+                
+                if st.button("💾 Save Preferences", key="save_pref"):
+                    preferences = {
+                        "priority": priority,
+                        "due_date": due_date.strftime("%Y-%m-%d") if due_date else None,
+                        "completed": completed
+                    }
+                    response = requests.post(f"{TASK_FILTER_URL}/save_filter_preferences", json=preferences)
+                    if response.ok:
+                        st.success("Filter preferences saved!")
+                        st.rerun()
+
+                if st.button("🗑️ Clear Saved", key="clear_pref"):
+                    response = requests.post(f"{TASK_FILTER_URL}/clear_preferences")
+                    if response.ok:
+                        st.success("Saved preferences cleared!")
+                        st.rerun()
+                
+                # if st.button("🔄 Reset Filters", key="reset_filters"):
+                #     st.rerun()
+
+    # Fetch and display filtered tasks
+    params = {}
+    if priority != "all":
+        params["priority"] = priority
+    if due_date:
+        params["due_date"] = due_date.strftime("%Y-%m-%d")
+    if completed != "all":
+        params["completed"] = "true" if completed == "completed" else "false"
+
+    response = requests.get(f"{TASK_FILTER_URL}/filter_tasks", params=params)
     if response.ok:
-        tasks = response.json()["tasks"]
+        tasks = response.json()["filtered_tasks"]
         if tasks:
             df = pd.DataFrame(tasks)
-            st.dataframe(df)
+            
+            # Reorder and rename columns for better presentation
+            columns_order = [
+                'title', 'description', 'priority', 'due_date', 
+                'completed', 'created_at', 'id'
+            ]
+            columns_rename = {
+                'title': 'Title',
+                'description': 'Description',
+                'priority': 'Priority',
+                'due_date': 'Due Date',
+                'completed': 'Completed',
+                'created_at': 'Created At',
+                'id': 'ID'
+            }
+            
+            # Reorder and select columns
+            df = df[columns_order]
+            
+            # Rename columns
+            df = df.rename(columns=columns_rename)
+            
+            # Format date columns
+            df['Due Date'] = pd.to_datetime(df['Due Date']).dt.strftime('%Y-%m-%d')
+            df['Created At'] = pd.to_datetime(df['Created At']).dt.strftime('%Y-%m-%d %H:%M')
+            
+            # Add custom styling
+            st.markdown("""
+                <style>
+                .stDataFrame {
+                    font-family: 'Arial', sans-serif;
+                }
+                .dataframe {
+                    border-collapse: collapse;
+                    margin: 25px 0;
+                    font-size: 0.9em;
+                    min-width: 400px;
+                    border-radius: 5px 5px 0 0;
+                    overflow: hidden;
+                    box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+                }
+                .dataframe thead tr {
+                    background-color: #009879;
+                    color: #ffffff;
+                    text-align: left;
+                    font-weight: bold;
+                }
+                .dataframe th,
+                .dataframe td {
+                    padding: 12px 15px;
+                }
+                .dataframe tbody tr {
+                    border-bottom: 1px solid #dddddd;
+                }
+                .dataframe tbody tr:nth-of-type(even) {
+                    background-color: #f3f3f3;
+                }
+                .dataframe tbody tr:last-of-type {
+                    border-bottom: 2px solid #009879;
+                }
+                </style>
+            """, unsafe_allow_html=True)
+            
+            # Display the styled dataframe
+            st.dataframe(
+                df,
+                column_config={
+                    "Title": st.column_config.TextColumn(
+                        "Title",
+                        width="small",
+                        help="Task title"
+                    ),
+                    "Description": st.column_config.TextColumn(
+                        "Description",
+                        width="large",
+                        help="Task description"
+                    ),
+                    "Priority": st.column_config.SelectboxColumn(
+                        "Priority",
+                        width="small",
+                        options=["low", "medium", "high"],
+                        help="Task priority level"
+                    ),
+                    "Due Date": st.column_config.DateColumn(
+                        "Due Date",
+                        width="small",
+                        format="YYYY-MM-DD",
+                        help="Task due date"
+                    ),
+                    "Completed": st.column_config.CheckboxColumn(
+                        "Completed",
+                        width="small",
+                        help="Task completion status"
+                    ),
+                    "Created At": st.column_config.DatetimeColumn(
+                        "Created At",
+                        width="small",
+                        format="YYYY-MM-DD HH:mm",
+                        help="Task creation date and time"
+                    ),
+                    "ID": st.column_config.TextColumn(
+                        "ID",
+                        width="large",
+                        help="Task unique identifier"
+                    )
+                },
+                hide_index=True,
+                use_container_width=True
+            )
         else:
-            st.info("No tasks available.")
+            st.info("No tasks match the current filters.")
     else:
         st.error("Error fetching tasks.")
 
 def get_task_stats():
-    st.header("View Stats")
+    st.title("📊 Task Statistics Overview")
     
-    # Explain benefits and costs
-    st.info("**Benefits:** Allows you to analyze your task data, providing insights into your productivity and task distribution.")
-    st.warning("**Costs:** Relies on accurate and up-to-date task data, which requires consistent task management.")
+    # Top containers for key stats
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        response = requests.get(f"{TASK_STATS_URL}/stats")
+        if response.ok:
+            stats = response.json()
+            st.metric(label="Total Tasks", value=stats["total_tasks"])
+            st.metric(label="Completed Tasks", value=stats["completed_tasks"])
+            st.metric(label="Pending Tasks", value=stats["pending_tasks"])
+            st.metric(label="Avg Completion Time", value=stats["avg_completion_time"])
+        else:
+            st.error("Error fetching stats.")
 
-    response = requests.get(f"{TASK_STATS_URL}/stats")
-    if response.ok:
-        stats = response.json()
-        #Format this better than JSON
+    # Stacked bar chart for task completion by priority
+    st.markdown("### Task Completion by Priority")
+    response = requests.get(f"{TASK_STATS_URL}/task_summary")
+    if response.ok and response.json():  # Check if data exists
+        summary = response.json()
+        df = pd.DataFrame.from_dict(summary, orient="index")
+        df.columns = ["Completed", "Not Completed"]
         
-        st.json(stats)
+        # Display the stacked bar chart only if data is available
+        with st.container():
+            st.bar_chart(df)
     else:
-        st.error("Error fetching stats.")
+        st.info("No data available for task completion by priority.")
+
+    # Scatter plot for task completion times
+    st.markdown("### Task Completion Times")
+    response = requests.get(f"{TASK_STATS_URL}/completion_times")
+    if response.ok and response.json():  # Check if data exists
+        completion_times = response.json()
+        completion_df = pd.DataFrame(completion_times)
+
+        # Ensure that we have 'completion_time' column for scatter plot
+        if 'completion_time' in completion_df.columns:
+            with st.container():
+                st.write("Completion times (in seconds) for completed tasks")
+                st.scatter_chart(completion_df[['completion_time']])
+    else:
+        st.info("No data available for task completion times.")
+
 
 def productivity_analysis():
     st.header("Productivity Analysis")
@@ -435,17 +688,18 @@ def redo_action():
             st.session_state["redo_message"] = "Error redoing mark complete action."
 
 def main():
-    st.title("Task Management App")
-    tabs = st.tabs([
-        "Add Task",
-        "Mark Task Complete",
-        "View Tasks",
-        "Get Task Stats",
-        "Productivity Analysis",
-        "Filter Tasks",
-        "Display Reminders"
-    ])
-
+    st.sidebar.title("🔧 Task Management Controls")
+    st.sidebar.markdown("Use the buttons below for quick actions.")
+    st.title("🌌 Task Management Dashboard")
+    # page = st.sidebar.selectbox(
+    #     "Select Page",
+    #     ["📝 Add Task", "✅ Mark Complete", "📋 View Tasks", 
+    #      "📊 Stats", "📈 Productivity", "⏰ Reminders"]
+    # )
+    tabs=st.tabs(
+        ["📝 Add Task", "✅ Mark Complete", "📋 View Tasks",
+         "📊 Stats", "📈 Productivity", "⏰ Reminders"]
+    )
     with tabs[0]:
         add_task_form()
         add_task_quick()
@@ -459,8 +713,6 @@ def main():
     with tabs[4]:
         productivity_analysis()
     with tabs[5]:
-        filter_tasks()
-    with tabs[6]:
         display_reminders()
 
     st.sidebar.header("Actions")

@@ -8,7 +8,8 @@ services:
     ports:
       - "8501:8501"
     volumes:
-      - .:/app  # Mount the current directory to /app inside the container
+      - ./:/app
+      - filter_preferences:/app/data
     command: ["streamlit", "run", "main.py", "--server.port=8501", "--server.address=0.0.0.0"]
     depends_on:
       - task_stats
@@ -23,7 +24,8 @@ services:
     ports:
       - "5001:5001"
     volumes:
-      - .:/app
+      - ./:/app
+      - filter_preferences:/app/data
     command: ["python", "task_stats.py"]
 
   reminder_service:
@@ -33,7 +35,8 @@ services:
     ports:
       - "5002:5002"
     volumes:
-      - .:/app
+      - ./:/app
+      - filter_preferences:/app/data
     command: ["python", "reminder_service.py"]
 
   task_filter:
@@ -43,7 +46,8 @@ services:
     ports:
       - "5003:5003"
     volumes:
-      - .:/app
+      - ./:/app
+      - filter_preferences:/app/data
     command: ["python", "task_filter.py"]
 
   productivity_analysis:
@@ -53,5 +57,9 @@ services:
     ports:
       - "5004:5004"
     volumes:
-      - .:/app
+      - ./:/app
+      - filter_preferences:/app/data
     command: ["python", "productivity_analysis.py"]
+
+volumes:
+  filter_preferences:

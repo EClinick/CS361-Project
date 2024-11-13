@@ -26,6 +26,7 @@ def mark_complete():
         for task in tasks:
             if task["id"] == task_id:
                 task["completed"] = True
+                task["stopped_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 update_response = requests.post("http://task_stats:5001/update_task", json=task)
                 if update_response.ok:
                     return jsonify({"message": "Task marked as complete!"})

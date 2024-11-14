@@ -161,7 +161,7 @@ Even though our primary goal is to test the **Task Filter Service**, the **Task 
 ### Conclusion
 
 The comprehensive testing of the **Task Filter Service** ensures that filtering functionalities and preference management operate as expected. Including the **Task Stats Service** in the testing process is crucial for managing the necessary task data, thereby facilitating accurate and reliable test outcomes.
--------------------------------------------------------------------
+
 
 
 ## Task Filter Service Communication Contract
@@ -282,9 +282,9 @@ The UML sequence diagram is intended to be used as a reference for the communica
 - The service maintains its own filter preferences storage
 - Requests are stateless - each request must include all needed parameters
 - Response times may vary based on the total number of tasks
-  
 
--------------------------------------------------------------------
+
+
 
 ## Inclusivity Heuristics Justification
 ### Heuristic 1: Explain Benefits of Features

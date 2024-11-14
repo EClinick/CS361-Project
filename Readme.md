@@ -171,7 +171,13 @@ The Task Filter Service provides a RESTful API endpoint that allows filtering of
 
 ### 2. Making Requests
 
+The reason why the base URL is task_filter and not localhost:5003 is because the Task Filter Service is a microservice and it is intended to be run on a different machine than the Task Stats Service.
+
 #### Base URL
+```
+http://localhost:5003
+```
+or
 ```
 http://task_filter:5003
 ```

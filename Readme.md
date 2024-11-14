@@ -7,8 +7,9 @@ This project is a microservices-based Task Management application that allows us
 1. [Microservices](#microservices)
 2. [Inclusivity Heuristics Justification](#inclusivity-heuristics-justification)
 3. [Testing Microservice A](#testing-microservice-a)
-4. [Setup Instructions](#setup-instructions)
-5. [Future Enhancements](#future-enhancements)
+4. [Task Filter Service Communication Contract](#task-filter-service-communication-contract)
+5. [Setup Instructions](#setup-instructions)
+6. [Future Enhancements](#future-enhancements)
 
 ## Microservices
 ### Implemented Microservices

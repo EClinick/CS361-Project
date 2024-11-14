@@ -161,71 +161,130 @@ Even though our primary goal is to test the **Task Filter Service**, the **Task 
 ### Conclusion
 
 The comprehensive testing of the **Task Filter Service** ensures that filtering functionalities and preference management operate as expected. Including the **Task Stats Service** in the testing process is crucial for managing the necessary task data, thereby facilitating accurate and reliable test outcomes.
+-------------------------------------------------------------------
+
 
 ## Task Filter Service Communication Contract
 
-### Requesting Data
-The Task Filter Service accepts HTTP GET requests to filter tasks based on various criteria. You can request filtered tasks by making a GET request to the `/filter_tasks` endpoint with optional query parameters.
+### 1. Overview
+The Task Filter Service provides a RESTful API endpoint that allows filtering of tasks based on various criteria such as priority, completion status, and due date. This contract defines how to interact with the service.
 
-#### Example Request:
+### 2. Making Requests
+
+#### Base URL
+```
+http://task_filter:5003
+```
+
+#### Endpoint
+```
+GET /filter_tasks
+```
+
+#### Query Parameters
+| Parameter  | Type    | Values                | Description                    |
+|-----------|---------|----------------------|--------------------------------|
+| priority  | string  | low, medium, high    | Filter tasks by priority level |
+| completed | boolean | true, false          | Filter by completion status    |
+| due_date  | string  | YYYY-MM-DD           | Filter tasks by due date       |
+
+#### Example Requests
 ```python
 import requests
 
-# Example 1: Filter by priority
-response = requests.get("http://task_filter:5003/filter_tasks?priority=high")
+# Basic request - filter by priority
+response = requests.get(
+    "http://task_filter:5003/filter_tasks",
+    params={"priority": "high"}
+)
 
-# Example 2: Filter by multiple criteria
-response = requests.get("http://task_filter:5003/filter_tasks?priority=high&completed=true&due_date=2024-03-20")
-
-# Available query parameters:
-# - priority: 'low', 'medium', 'high'
-# - completed: 'true', 'false'
-# - due_date: 'YYYY-MM-DD'
+# Advanced request - multiple filters
+response = requests.get(
+    "http://task_filter:5003/filter_tasks",
+    params={
+        "priority": "high",
+        "completed": "true",
+        "due_date": "2024-03-20"
+    }
+)
 ```
 
-### Receiving Data
-The service returns data in JSON format. The response will contain a list of filtered tasks under the key "filtered_tasks".
+### 3. Receiving Data
 
-#### Example Response:
+#### Success Response Format
 ```python
-# Parse the JSON response
+{
+    "filtered_tasks": [
+        {
+            "id": "task-uuid",
+            "title": "Task Title",
+            "description": "Task Description",
+            "priority": "high",
+            "due_date": "2024-03-20",
+            "completed": false,
+            "created_at": "2024-03-19 10:30:00"
+        },
+        // ... more tasks
+    ]
+}
+```
+
+#### Example Usage
+```python
+response = requests.get("http://task_filter:5003/filter_tasks")
 if response.ok:
     filtered_tasks = response.json()["filtered_tasks"]
-    # filtered_tasks will be a list of task dictionaries
-    # Each task has the following structure:
-    # {
-    #     "id": "task-uuid",
-    #     "title": "Task Title",
-    #     "description": "Task Description",
-    #     "priority": "high",
-    #     "due_date": "2024-03-20",
-    #     "completed": false,
-    #     "created_at": "2024-03-19 10:30:00"
-    # }
+    for task in filtered_tasks:
+        print(f"Task: {task['title']}, Priority: {task['priority']}")
 else:
-    print("Error:", response.status_code)
+    print(f"Error: {response.status_code}")
 ```
 
-### UML Sequence Diagram
-The following sequence diagram illustrates the communication flow between your application and the Task Filter Service:
+### 4. Error Handling
+
+#### Status Codes
+| Code | Description           | Cause                           |
+|------|--------------------- |--------------------------------|
+| 200  | Success              | Request processed successfully  |
+| 400  | Bad Request          | Invalid parameter values        |
+| 500  | Internal Server Error | Server-side processing error   |
+
+#### Error Response Format
+```python
+{
+    "error": "Description of what went wrong"
+}
+```
+
+#### Example Error Handling
+```python
+response = requests.get(
+    "http://task_filter:5003/filter_tasks",
+    params={"priority": "invalid"}
+)
+
+if not response.ok:
+    error = response.json().get("error", "Unknown error")
+    print(f"Request failed: {error}")
+```
+
+### 5. UML Sequence Diagram
+
+The UML sequence diagram is intended to be used as a reference for the communication between the Task Filter Service and the Task Stats Service. 
 
 ![UML Sequence Diagram](./uml_sequence_diagram.png)
 
-### Error Handling
-The service returns appropriate HTTP status codes:
-- 200: Successful request
-- 400: Invalid parameters
-- 500: Server error
 
-Error responses include a JSON object with an "error" key containing the error message.
+### 6. Implementation Notes
 
-Example error handling:
-```python
-response = requests.get("http://task_filter:5003/filter_tasks?priority=invalid")
-if not response.ok:
-    error_message = response.json().get("error", "Unknown error")
-    print(f"Error: {error_message}")
-```
+- All dates should be in ISO format (YYYY-MM-DD)
+- Priority values are case-sensitive
+- The service maintains its own filter preferences storage
+- Requests are stateless - each request must include all needed parameters
+- Response times may vary based on the total number of tasks
+  
+
+-------------------------------------------------------------------
 
 ## Inclusivity Heuristics Justification
 ### Heuristic 1: Explain Benefits of Features

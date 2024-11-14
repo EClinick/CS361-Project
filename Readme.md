@@ -161,26 +161,70 @@ Even though our primary goal is to test the **Task Filter Service**, the **Task 
 
 The comprehensive testing of the **Task Filter Service** ensures that filtering functionalities and preference management operate as expected. Including the **Task Stats Service** in the testing process is crucial for managing the necessary task data, thereby facilitating accurate and reliable test outcomes.
 
-<!-- ### Planned Microservices
+## Task Filter Service Communication Contract
 
-#### 5. User Data Service
-- **Description:** Manages user data, including authentication and user-specific task management.
-- **Endpoints:**
-  - **User Registration**
-    - **URL:** `/register`
-    - **Method:** `POST`
-    - **Description:** Registers a new user.
-    - **Request Body:** JSON object with user credentials.
-  - **User Login**
-    - **URL:** `/login`
-    - **Method:** `POST`
-    - **Description:** Authenticates a user and provides a token.
-    - **Request Body:** JSON object with user credentials.
-  - **User Profile**
-    - **URL:** `/profile`
-    - **Method:** `GET`
-    - **Description:** Retrieves user profile information.
-    - **Headers:** Authentication token. -->
+### Requesting Data
+The Task Filter Service accepts HTTP GET requests to filter tasks based on various criteria. You can request filtered tasks by making a GET request to the `/filter_tasks` endpoint with optional query parameters.
+
+#### Example Request:
+```python
+import requests
+
+# Example 1: Filter by priority
+response = requests.get("http://task_filter:5003/filter_tasks?priority=high")
+
+# Example 2: Filter by multiple criteria
+response = requests.get("http://task_filter:5003/filter_tasks?priority=high&completed=true&due_date=2024-03-20")
+
+# Available query parameters:
+# - priority: 'low', 'medium', 'high'
+# - completed: 'true', 'false'
+# - due_date: 'YYYY-MM-DD'
+```
+
+### Receiving Data
+The service returns data in JSON format. The response will contain a list of filtered tasks under the key "filtered_tasks".
+
+#### Example Response:
+```python
+# Parse the JSON response
+if response.ok:
+    filtered_tasks = response.json()["filtered_tasks"]
+    # filtered_tasks will be a list of task dictionaries
+    # Each task has the following structure:
+    # {
+    #     "id": "task-uuid",
+    #     "title": "Task Title",
+    #     "description": "Task Description",
+    #     "priority": "high",
+    #     "due_date": "2024-03-20",
+    #     "completed": false,
+    #     "created_at": "2024-03-19 10:30:00"
+    # }
+else:
+    print("Error:", response.status_code)
+```
+
+### UML Sequence Diagram
+The following sequence diagram illustrates the communication flow between your application and the Task Filter Service:
+
+![UML Sequence Diagram](./uml_sequence_diagram.png)
+
+### Error Handling
+The service returns appropriate HTTP status codes:
+- 200: Successful request
+- 400: Invalid parameters
+- 500: Server error
+
+Error responses include a JSON object with an "error" key containing the error message.
+
+Example error handling:
+```python
+response = requests.get("http://task_filter:5003/filter_tasks?priority=invalid")
+if not response.ok:
+    error_message = response.json().get("error", "Unknown error")
+    print(f"Error: {error_message}")
+```
 
 ## Inclusivity Heuristics Justification
 ### Heuristic 1: Explain Benefits of Features
